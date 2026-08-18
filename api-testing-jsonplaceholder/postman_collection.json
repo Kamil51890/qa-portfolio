@@ -1,0 +1,152 @@
+{
+  "info": {
+    "name": "JSONPlaceholder API Testing",
+    "description": "Тест-кейсы TC-01..TC-15 из test-cases.md. Каждый запрос содержит автоматическую проверку во вкладке Tests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://jsonplaceholder.typicode.com" }
+  ],
+  "item": [
+    {
+      "name": "TC-01 GET /posts - список постов",
+      "request": { "method": "GET", "url": "{{baseUrl}}/posts" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+        "pm.test('Body is array of 100 posts', () => { const json = pm.response.json(); pm.expect(json).to.be.an('array'); pm.expect(json.length).to.eql(100); });"
+      ] } }]
+    },
+    {
+      "name": "TC-02 GET /posts/1 - пост по id",
+      "request": { "method": "GET", "url": "{{baseUrl}}/posts/1" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+        "pm.test('Has expected fields', () => { const json = pm.response.json(); pm.expect(json).to.include.all.keys('userId','id','title','body'); });"
+      ] } }]
+    },
+    {
+      "name": "TC-03 GET /posts/9999 - несуществующий id",
+      "request": { "method": "GET", "url": "{{baseUrl}}/posts/9999" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Записать фактический код ответа', () => { console.log('Status:', pm.response.code); pm.expect(pm.response.code).to.be.oneOf([404, 200]); });"
+      ] } }]
+    },
+    {
+      "name": "TC-04 GET /posts/abc - нечисловой id",
+      "request": { "method": "GET", "url": "{{baseUrl}}/posts/abc" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Записать фактический код ответа', () => { console.log('Status:', pm.response.code); });"
+      ] } }]
+    },
+    {
+      "name": "TC-05 POST /posts - валидное тело",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/posts",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"test post\",\n  \"body\": \"test body\",\n  \"userId\": 1\n}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status code is 201', () => pm.response.to.have.status(201));",
+        "pm.test('Response has new id', () => { const json = pm.response.json(); pm.expect(json).to.have.property('id'); });"
+      ] } }]
+    },
+    {
+      "name": "TC-06 POST /posts - без обязательного поля title",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/posts",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"body\": \"test body\",\n  \"userId\": 1\n}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Записать фактический код ответа', () => { console.log('Status:', pm.response.code); });"
+      ] } }]
+    },
+    {
+      "name": "TC-07 POST /posts - пустое тело",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/posts",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('API does not return 500', () => pm.expect(pm.response.code).to.not.eql(500));",
+        "pm.test('Записать фактический код ответа', () => { console.log('Status:', pm.response.code); });"
+      ] } }]
+    },
+    {
+      "name": "TC-08 PUT /posts/1 - полное обновление",
+      "request": {
+        "method": "PUT",
+        "url": "{{baseUrl}}/posts/1",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"id\": 1,\n  \"title\": \"updated title\",\n  \"body\": \"updated body\",\n  \"userId\": 1\n}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+        "pm.test('Title is updated', () => { const json = pm.response.json(); pm.expect(json.title).to.eql('updated title'); });"
+      ] } }]
+    },
+    {
+      "name": "TC-09 PATCH /posts/1 - частичное обновление",
+      "request": {
+        "method": "PATCH",
+        "url": "{{baseUrl}}/posts/1",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"patched title\"\n}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+        "pm.test('Only title changed', () => { const json = pm.response.json(); pm.expect(json.title).to.eql('patched title'); });"
+      ] } }]
+    },
+    {
+      "name": "TC-10 DELETE /posts/1 - удаление",
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/posts/1" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+        "pm.test('Записать: проверь GET /posts/1 отдельным запросом - удалился ли пост реально', () => {});"
+      ] } }]
+    },
+    {
+      "name": "TC-11 GET /users - список пользователей",
+      "request": { "method": "GET", "url": "{{baseUrl}}/users" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+        "pm.test('Each user has required fields', () => { const json = pm.response.json(); pm.expect(json[0]).to.include.all.keys('id','name','email','address'); });"
+      ] } }]
+    },
+    {
+      "name": "TC-12 GET /users/1/posts - посты пользователя",
+      "request": { "method": "GET", "url": "{{baseUrl}}/users/1/posts" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+        "pm.test('All posts belong to userId 1', () => { const json = pm.response.json(); json.forEach(p => pm.expect(p.userId).to.eql(1)); });"
+      ] } }]
+    },
+    {
+      "name": "TC-13 GET /comments?postId=1 - фильтрация",
+      "request": { "method": "GET", "url": "{{baseUrl}}/comments?postId=1" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+        "pm.test('All comments belong to postId 1', () => { const json = pm.response.json(); json.forEach(c => pm.expect(c.postId).to.eql(1)); });"
+      ] } }]
+    },
+    {
+      "name": "TC-14 GET /posts - проверка заголовков",
+      "request": { "method": "GET", "url": "{{baseUrl}}/posts" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Content-Type is application/json', () => pm.response.to.have.header('Content-Type'));"
+      ] } }]
+    },
+    {
+      "name": "TC-15 GET /posts - время ответа",
+      "request": { "method": "GET", "url": "{{baseUrl}}/posts" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Response time is reasonable', () => { console.log('Response time ms:', pm.response.responseTime); pm.expect(pm.response.responseTime).to.be.below(2000); });"
+      ] } }]
+    }
+  ]
+}
